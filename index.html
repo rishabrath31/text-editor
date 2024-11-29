@@ -1,177 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rich Text Editor</title>
+    <!-- FontAwesome Icons -->
     <link
-      href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins&display=swap"
       rel="stylesheet"
     />
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css" />
-    <title>Stylish Text Editor</title>
-   
   </head>
   <body>
-    <div class="editor-wrapper">
-      <div class="text-editor">
-        <div class="toolbar">
-          <div class="header">
-            <select class="dropdown" onchange="fileHandle(this.value);">
-              <option value="" hidden disabled>File</option>
-              <option value="new">New File</option>
-              <option value="txt">Save as TXT</option>
-              <option value="pdf">Save as PDF</option>
-            </select>
-            <select
-              class="dropdown"
-              onchange="formatDoc('formatBlock', this.value);"
-            >
-              <option value="" hidden disabled>Format</option>
-              <option value="h1">Heading 1</option>
-              <option value="h2">Heading 2</option>
-              <option value="p">Paragraph</option>
-            </select>
+    <div class="text-editor-container">
+      <div class="options">
+        <!-- Text Format -->
+        <button id="bold" class="option-button format">
+          <i class="fa-solid fa-bold"></i>
+        </button>
+        <button id="italic" class="option-button format">
+          <i class="fa-solid fa-italic"></i>
+        </button>
+        <button id="underline" class="option-button format">
+          <i class="fa-solid fa-underline"></i>
+        </button>
+        <button id="strikethrough" class="option-button format">
+          <i class="fa-solid fa-strikethrough"></i>
+        </button>
+        <button id="superscript" class="option-button script">
+          <i class="fa-solid fa-superscript"></i>
+        </button>
+        <button id="subscript" class="option-button script">
+          <i class="fa-solid fa-subscript"></i>
+        </button>
 
-            <div class="font-size-container">
-              <!-- Hidden font-size input field, used for manual entry -->
-              <input
-                type="text"
-                id="fontSizeInput"
-                placeholder="Font size (e.g., 16px)"
-                oninput="validateFontSize();"
-                onblur="applyFontSize();"
-                onkeydown="if (event.key === 'Enter') { event.preventDefault(); applyFontSize(); }"
-              />
-              <!-- Font size dropdown -->
-              <select
-                id="fontSizeDropdown"
-                onchange="setFontSizeFromDropdown();"
-              >
-                <option value="12px">Size</option>
-                <option value="12px">12px</option>
-                <option value="14px">14px</option>
-                <option value="16px">16px</option>
-                <option value="18px">18px</option>
-                <option value="20px">20px</option>
-                <option value="24px">24px</option>
-                <option value="28px">28px</option>
-                <option value="32px">32px</option>
-              </select>
-            </div>
+        <!-- List -->
+        <button id="insertOrderedList" class="option-button">
+          <div class="fa-solid fa-list-ol"></div>
+        </button>
+        <button id="insertUnorderedList" class="option-button">
+          <i class="fa-solid fa-list"></i>
+        </button>
 
-            <h5>Text Color</h5>
-            <input
-              type="color"
-              class="color-picker"
-              title="Text Color"
-              oninput="formatDoc('foreColor', this.value);"
-            />
-            <h5>Background Text Color</h5>
-            <input
-              type="color"
-              class="background-picker"
-              title="Highlight Color"
-              oninput="formatDoc('hiliteColor', this.value);"
-            />
-          </div>
-          <div class="buttons">
-            <button
-              id="bold"
-              class="button"
-              title="Bold"
-              onclick="formatDoc('bold')"
-            >
-              <i class="bx bx-bold"></i>
-            </button>
-            <button
-              id="italic"
-              class="button"
-              title="Italic"
-              onclick="formatDoc('italic')"
-            >
-              <i class="bx bx-italic"></i>
-            </button>
-            <button
-              id="underline"
-              class="button"
-              title="Underline"
-              onclick="formatDoc('underline')"
-            >
-              <i class="bx bx-underline"></i>
-            </button>
-            <button
-              id="justifyLeft"
-              class="button"
-              title="Left Align"
-              onclick="formatDoc('justifyLeft')"
-            >
-              <i class="bx bx-align-left"></i>
-            </button>
-            <button
-              id="justifyCenter"
-              class="button"
-              title="Center Align"
-              onclick="formatDoc('justifyCenter')"
-            >
-              <i class="bx bx-align-middle"></i>
-            </button>
-            <button
-              id="justifyRight"
-              class="button"
-              title="Right Align"
-              onclick="formatDoc('justifyRight')"
-            >
-              <i class="bx bx-align-right"></i>
-            </button>
-            <button
-              id="link"
-              class="button"
-              title="Insert Link"
-              onclick="addLink()"
-            >
-              <i class="bx bx-link"></i>
-            </button>
-            <button
-              id="image"
-              class="button"
-              title="Insert Image"
-              onclick="triggerImageUpload()"
-            >
-              <i class="bx bx-image"></i>
-            </button>
-            <input
-              type="file"
-              id="imageUpload"
-              accept="image/*"
-              style="display: none"
-              onchange="insertImage(event)"
-            />
-            <button
-              id="insertTable"
-              class="button"
-              title="Insert Table"
-              onclick="insertTable()"
-            >
-              Insert Table
-            </button>
-          </div>
-          <!-- Add Search Box -->
-          <div class="search-box">
-            <input
-              type="text"
-              id="searchInput"
-              placeholder="Search..."
-              oninput="searchText()"
-            />
-          </div>
+        <!-- Undo/Redo -->
+        <button id="undo" class="option-button">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button id="redo" class="option-button">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+
+        <!-- Link -->
+        <button id="createLink" class="adv-option-button">
+          <i class="fa fa-link"></i>
+        </button>
+        <button id="unlink" class="option-button">
+          <i class="fa fa-unlink"></i>
+        </button>
+
+        <!-- Alignment -->
+        <button id="justifyLeft" class="option-button align">
+          <i class="fa-solid fa-align-left"></i>
+        </button>
+        <button id="justifyCenter" class="option-button align">
+          <i class="fa-solid fa-align-center"></i>
+        </button>
+        <button id="justifyRight" class="option-button align">
+          <i class="fa-solid fa-align-right"></i>
+        </button>
+        <button id="justifyFull" class="option-button align">
+          <i class="fa-solid fa-align-justify"></i>
+        </button>
+        <button id="indent" class="option-button spacing">
+          <i class="fa-solid fa-indent"></i>
+        </button>
+        <button id="outdent" class="option-button spacing">
+          <i class="fa-solid fa-outdent"></i>
+        </button>
+
+        <!-- Image Insertion -->
+        <button id="insertImage" class="option-button">
+          <i class="fa-solid fa-image"></i>
+        </button>
+        <input
+          type="file"
+          id="imageInput"
+          style="display: none"
+          accept="image/*"
+        />
+
+        <!-- Headings -->
+        <select id="formatBlock" class="adv-option-button">
+          <option value="H1">H1</option>
+          <option value="H2">H2</option>
+          <option value="H3">H3</option>
+          <option value="H4">H4</option>
+          <option value="H5">H5</option>
+          <option value="H6">H6</option>
+        </select>
+
+        <!-- Font -->
+        <select id="fontName" class="adv-option-button"></select>
+        <select id="fontSize" class="adv-option-button"></select>
+
+        <!-- Color -->
+        <div class="input-wrapper">
+          <input type="color" id="foreColor" class="adv-option-button" />
+          <label for="foreColor">Font Color</label>
         </div>
-        <div
-          contenteditable="true"
-          spellcheck="false"
-          class="editor-content"
-        ></div>
+        <div class="input-wrapper">
+          <input type="color" id="backColor" class="adv-option-button" />
+          <label for="backColor">Highlight Color</label>
+        </div>
+      </div>
+
+      <div id="text-input" contenteditable="true">
+        
       </div>
     </div>
+
     <script src="script.js"></script>
   </body>
 </html>

@@ -1,203 +1,241 @@
-// Function to apply formatting commands (bold, italic, etc.)
-function formatDoc(cmd, value = null) {
-  const content = document.querySelector("[contenteditable='true']");
+// Query selectors for buttons
+let optionsButtons = document.querySelectorAll(".option-button");
+let advancedOptionButton = document.querySelectorAll(".adv-option-button");
+let fontName = document.getElementById("fontName");
+let fontSizeRef = document.getElementById("fontSize");
+let writingArea = document.getElementById("text-input");
+let linkButton = document.getElementById("createLink");
+let alignButtons = document.querySelectorAll(".align");
+let spacingButtons = document.querySelectorAll(".spacing");
+let formatButtons = document.querySelectorAll(".format");
+let scriptButtons = document.querySelectorAll(".script");
 
-  // Ensure content is focused before applying the command
-  content.focus();
+// Tooltips mapping for all buttons
+const tooltips = {
+  bold: "Bold",
+  italic: "Italic",
+  underline: "Underline",
+  strikethrough: "Strikethrough",
+  superscript: "Superscript",
+  subscript: "Subscript",
+  insertOrderedList: "Ordered List",
+  insertUnorderedList: "Unordered List",
+  undo: "Undo",
+  redo: "Redo",
+  createLink: "Insert Link",
+  unlink: "Remove Link",
+  justifyLeft: "Align Left",
+  justifyCenter: "Align Center",
+  justifyRight: "Align Right",
+  justifyFull: "Justify Text",
+  indent: "Indent",
+  outdent: "Outdent",
+  insertImage: "Insert Image",
+  formatBlock: "Change Heading",
+  fontName: "Change Font",
+  fontSize: "Change Font Size",
+  foreColor: "Font Color",
+  backColor: "Highlight Color",
+};
 
-  // Apply the formatting command
-  if (value) {
-    document.execCommand(cmd, false, value);
+// Add tooltips to all matching elements
+document
+  .querySelectorAll(".option-button, .adv-option-button")
+  .forEach((element) => {
+    const elementId = element.id;
+    if (tooltips[elementId]) {
+      element.setAttribute("title", tooltips[elementId]);
+    }
+  });
+
+// Add tooltips to static labels (e.g., Font Color, Highlight Color)
+document.querySelectorAll(".input-wrapper label").forEach((label) => {
+  const inputId = label.getAttribute("for");
+  if (tooltips[inputId]) {
+    label.setAttribute("title", tooltips[inputId]);
+  }
+});
+
+// Ensure the writing area is contenteditable
+writingArea.contentEditable = true;
+
+// List of font names
+let fontList = [
+  "Arial",
+  "Verdana",
+  "Times New Roman",
+  "Garamond",
+  "Georgia",
+  "Courier New",
+  "cursive",
+];
+
+// Initializer for setting up the font list and size options
+const initializer = () => {
+  highlighter(alignButtons, true);
+  highlighter(spacingButtons, true);
+  highlighter(formatButtons, false);
+  highlighter(scriptButtons, true);
+
+  // Adding font names
+  fontList.forEach((value) => {
+    let option = document.createElement("option");
+    option.value = value;
+    option.innerHTML = value;
+    fontName.appendChild(option);
+  });
+
+  // Adding font size options from 1px to 100px
+  for (let i = 1; i <= 100; i++) {
+    let option = document.createElement("option");
+    option.value = `${i}px`; // Font sizes in pixels
+    option.innerHTML = `${i}px`;
+    fontSizeRef.appendChild(option);
+  }
+
+  fontSizeRef.value = "12px"; // Default font size
+};
+
+// Main logic for applying text modifications
+const modifyText = (command, value) => {
+  if (command === "fontName" || command === "fontSize") {
+    applyFontSize(value); // Call font size logic
   } else {
-    document.execCommand(cmd);
+    document.execCommand(command, false, value);
   }
+};
 
-  // Toggle active state for the button after the command is executed
-  toggleActiveState(cmd);
-}
+// Apply Font Size Directly in Pixels
+const applyFontSize = (size) => {
+  const selection = window.getSelection();
+  if (selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
 
-// Function to toggle the active state for toolbar buttons
-function toggleActiveState(cmd) {
-  const button = document.getElementById(cmd);
-
-  // Add or remove the 'active' class based on the current state
-  if (document.queryCommandState(cmd)) {
-    button.classList.add("active");
-  } else {
-    button.classList.remove("active");
+    // If text is selected, wrap it in a <span> with the new font size
+    if (!range.collapsed) {
+      const span = document.createElement("span");
+      span.style.fontSize = size;
+      range.surroundContents(span);
+    }
   }
-}
+};
 
-// Function to add a hyperlink
-function addLink() {
-  const url = prompt("Insert URL");
-  if (url) {
-    formatDoc("createLink", url);
-  }
-}
-
-// Handle contenteditable for links
-const content = document.querySelector("[contenteditable='true']");
-
-content.addEventListener("mouseenter", function () {
-  const links = content.querySelectorAll("a");
-  links.forEach((link) => {
-    link.addEventListener("mouseenter", () => {
-      content.setAttribute("contenteditable", false);
-      link.target = "_blank";
-    });
-    link.addEventListener("mouseleave", () => {
-      content.setAttribute("contenteditable", true);
-    });
+// Basic operations which don't need a value parameter
+optionsButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    modifyText(button.id, null);
   });
 });
 
-// Toggle between code view and editor view
-let active = false;
-function toggleCodeView() {
-  active = !active;
-  if (active) {
-    content.textContent = content.innerHTML;
-    content.setAttribute("contenteditable", false);
+// Options that require a value parameter (e.g., fonts, colors, font sizes)
+advancedOptionButton.forEach((button) => {
+  button.addEventListener("change", () => {
+    modifyText(button.id, button.value);
+  });
+});
+
+// Specifically handle font size changes
+fontSizeRef.addEventListener("change", () => {
+  const selectedFontSize = fontSizeRef.value;
+  applyFontSize(selectedFontSize);
+});
+
+// Link creation logic
+linkButton.addEventListener("click", () => {
+  let userLink = prompt("Enter a URL");
+  if (/http/i.test(userLink)) {
+    modifyText("createLink", userLink);
   } else {
-    content.innerHTML = content.textContent;
-    content.setAttribute("contenteditable", true);
-  }
-}
-
-// Handle file operations (new, save as txt, save as pdf)
-function fileHandle(value) {
-  const filename = "untitled";
-  if (value === "new") {
-    content.innerHTML = "";
-  } else if (value === "txt") {
-    const blob = new Blob([content.innerText], { type: "text/plain" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `${filename}.txt`;
-    link.click();
-  } else if (value === "pdf") {
-    const options = { filename: `${filename}.pdf` };
-    html2pdf().set(options).from(content).save();
-  }
-}
-
-// Trigger the image upload dialog
-function triggerImageUpload() {
-  const imageInput = document.getElementById("imageUpload");
-  imageInput.click();
-}
-
-// Function to insert uploaded images as file URLs
-function insertImage(event) {
-  const files = event.target.files;
-
-  if (files.length > 0) {
-    const file = files[0];
-
-    if (file.type.startsWith("image/")) {
-      const fileURL = URL.createObjectURL(file);
-      const img = document.createElement("img");
-      img.classList.add("resizable");
-      img.src = fileURL;
-      img.alt = "Uploaded Image";
-      img.style.maxWidth = "200px";
-      img.style.height = "auto";
-      img.style.margin = "8px 0";
-      img.style.borderRadius = "4px";
-
-      content.appendChild(img);
-    } else {
-      alert("Only image files are allowed!");
-    }
-  }
-
-  event.target.value = ""; // Clear the input field
-}
-
-// Add resizing functionality for images
-content.addEventListener("mousedown", function (event) {
-  const target = event.target;
-  if (target.tagName === "IMG" && target.classList.contains("resizable")) {
-    const startX = event.clientX;
-    const startY = event.clientY;
-    const startWidth = target.offsetWidth;
-    const startHeight = target.offsetHeight;
-
-    function resizeImage(e) {
-      const newWidth = Math.max(startWidth + (e.clientX - startX), 50);
-      const newHeight = Math.max(startHeight + (e.clientY - startY), 50);
-      target.style.width = `${newWidth}px`;
-      target.style.height = `${newHeight}px`;
-    }
-
-    function stopResize() {
-      document.removeEventListener("mousemove", resizeImage);
-      document.removeEventListener("mouseup", stopResize);
-    }
-
-    document.addEventListener("mousemove", resizeImage);
-    document.addEventListener("mouseup", stopResize);
+    userLink = "http://" + userLink;
+    modifyText("createLink", userLink);
   }
 });
 
-// Change cursor when hovering over resizable images
-content.addEventListener("mousemove", function (event) {
-  const target = event.target;
-  if (target.tagName === "IMG" && target.classList.contains("resizable")) {
-    target.style.cursor = "nwse-resize";
-  }
-});
+// Highlight clicked button and toggle the 'active' class
+const highlighter = (className, needsRemoval) => {
+  className.forEach((button) =>
+    button.addEventListener("click", () => {
+      if (needsRemoval) {
+        let alreadyActive = false;
 
-// Ensure uploaded images are processed correctly when new images are added
-document.getElementById("imageUpload").addEventListener("change", insertImage);
+        if (button.classList.contains("active")) {
+          alreadyActive = true;
+        }
 
-// Function to insert a table
-function insertTable() {
-  const rows = prompt("Enter number of rows:", "2");
-  const cols = prompt("Enter number of columns:", "2");
-
-  if (rows && cols) {
-    const table = document.createElement("table");
-    table.style.width = "100%";
-    table.style.border = "1px solid #ddd";
-    table.style.borderCollapse = "collapse";
-
-    for (let i = 0; i < rows; i++) {
-      const tr = document.createElement("tr");
-      for (let j = 0; j < cols; j++) {
-        const td = document.createElement("td");
-        td.style.border = "1px solid #ddd";
-        td.style.padding = "8px";
-        td.contentEditable = true;
-        tr.appendChild(td);
+        highlighterRemover(className);
+        if (!alreadyActive) {
+          button.classList.add("active");
+        }
+      } else {
+        button.classList.toggle("active");
       }
-      table.appendChild(tr);
-    }
-
-    content.appendChild(table);
-  }
-}
-
-// SEARCH BOX
-function searchText() {
-  const searchQuery = document.getElementById("searchInput").value.trim();
-  const content = document.querySelector(".editor-content");
-
-  // Reset previous highlights before applying new ones
-  const highlightedText = content.innerHTML.replace(
-    /<span class="highlight">(.*?)<\/span>/g,
-    "$1"
+    })
   );
+};
 
-  if (searchQuery) {
-    const regex = new RegExp(`\\b(${searchQuery})\\b`, "gi"); // Case-insensitive search for whole words
-    const newContent = highlightedText.replace(
-      regex,
-      `<span class="highlight">$1</span>`
-    );
-    content.innerHTML = newContent;
-  } else {
-    content.innerHTML = highlightedText; // Restore original content if search is empty
-  }
+// Remove active class from buttons
+const highlighterRemover = (className) => {
+  className.forEach((button) => {
+    button.classList.remove("active");
+  });
+};
+
+// Image Insertion Logic
+document.addEventListener("DOMContentLoaded", () => {
+  const insertImageBtn = document.getElementById("insertImage");
+  const imageInput = document.createElement("input");
+  imageInput.type = "file";
+  imageInput.accept = "image/*";
+  imageInput.style.display = "none";
+
+  document.body.appendChild(imageInput);
+
+  insertImageBtn.addEventListener("click", () => {
+    imageInput.click();
+  });
+
+  imageInput.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        insertImageAtCursor(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+});
+
+// Function to insert image at cursor position
+function insertImageAtCursor(imageSource) {
+  writingArea.focus();
+
+  const imageWrapper = document.createElement("div");
+  imageWrapper.classList.add("image-wrapper");
+
+  const img = document.createElement("img");
+  img.src = imageSource;
+  img.style.maxWidth = "100%";
+  img.style.height = "auto";
+
+  imageWrapper.appendChild(img);
+  imageWrapper.style.width = "300px";
+  imageWrapper.style.height = "auto";
+
+  const selection = window.getSelection();
+  const range = selection.getRangeAt(0);
+  range.insertNode(imageWrapper);
+
+  const textNode = document.createTextNode("\u200B");
+  imageWrapper.parentNode.insertBefore(textNode, imageWrapper.nextSibling);
+
+  range.setStartAfter(textNode);
+  range.setEndAfter(textNode);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  writingArea.focus();
 }
+
+// Initialize
+window.onload = initializer;
